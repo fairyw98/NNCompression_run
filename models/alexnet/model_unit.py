@@ -51,33 +51,36 @@ class Unit(nn.Module):
         return (w_factor,h_factor)
 
 class sw_Unit(nn.Module):
-    def __init__(self, c2 = 1, quant_bits = 1, coder_channels = 8,en_stride = 7):
+    def __init__(self, c2 = 1, quant_bits = 1, coder_channels = 8,en_stride = 1):
         super().__init__()
 
         self.coder_channels = coder_channels
         self.en_stride =en_stride
 
-        self.c=[8,4,32]
-        self.e=[7,6]
+        # self.c=[8,4,16,32]
+        # self.e=[1,2]
+        self.param = [[8,1],[8,2],[4,1],[16,1],[32,2],[32,1]]
         _conv2d=[]
 
-        for i in self.c:
-            for j in self.e:
-                _conv2d.append((i,j))
+        # for i in self.c:
+        #     for j in self.e:
+        #         _conv2d.append((i,j))
 
+        for item in self.param:
+            _conv2d.append(item)
         self.sw_unit = nn.ModuleList([
             Unit(c2 = c2, quant_bits = quant_bits, coder_channels = _coder_channels,en_stride = _en_stride)
             for _coder_channels,_en_stride in _conv2d])
         
     def forward(self,x):
-        idx = int(self.c.index(self.coder_channels)*len(self.e)+self.e.index(self.en_stride))
+        idx = int(self.param.index([self.coder_channels,self.en_stride]))
         x = self.sw_unit[idx](x)
 
         return x
 
 
 class AlexNet(nn.Module):
-    def __init__(self, num_classes=1000, init_weights=False, partition_id = 3, quant_bits = -2, coder_channels = 8,en_stride = 7):
+    def __init__(self, num_classes=1000, init_weights=False, partition_id = 3, quant_bits = -2, coder_channels = 32,en_stride = 1):
         super(AlexNet, self).__init__()
         
         self.partition_id = partition_id
@@ -108,6 +111,7 @@ class AlexNet(nn.Module):
         )
 
         cfg = self._cal_feature_cfg()
+        # print(cfg)
         in_channels = cfg[self.partition_id]['in_channels']
 
         if quant_bits == -2:
@@ -149,6 +153,7 @@ class AlexNet(nn.Module):
                     if isinstance(f_layer, nn.ReLU):
                         cfg.append('R')
                     elif isinstance(f_layer, nn.Conv2d):
+                        # print(len(cfg))
                         cfg.append({'in_channels':f_layer.in_channels,'out_channels':f_layer.out_channels,'kernel_size': f_layer.kernel_size,'stride':f_layer.stride,'padding':f_layer.padding})
                     elif isinstance(f_layer,nn.MaxPool2d):
                         cfg.append('M')

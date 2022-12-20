@@ -1,4 +1,5 @@
 # algorithm 1 train.py
+import csv
 import os
 import argparse
 
@@ -157,11 +158,11 @@ def main(args):
     # if os.path.exists("database.csv") is True: 
     #     with open('database.csv','a+',newline='') as f:
     #         writer = csv.writer(f)
-    #         writer.writerow([args.partition_id,args.quantization,args.coder_channels,args.en_stride,best_acc])
+    #         writer.writerow([args.partition_id,args.quant_bits,args.coder_channels,args.en_stride,best_acc,min_loss])
     
     config.best_acc = best_acc
     config.min_loss = min_loss
-    # return best_acc
+    return best_acc
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

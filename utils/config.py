@@ -16,7 +16,7 @@ class train_args:
                 num_classes = 10,
                 weights = '',
                 freeze_layers = False,
-                epochs = 50,
+                epochs = 100,
                 lr = 0.0002,
                 display = False,
                 tensorboard = False):

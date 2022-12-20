@@ -12,6 +12,7 @@ from models.mobilenet.sw_model_v2 import MobileNetV2 as create_model
 from models.alexnet.model_unit import AlexNet as create_model
 from utils.utils import Cluster, read_split_data, sw_evaluate, sw_train_one_epoch, evaluate
 
+import csv
 
 def main(args):
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
@@ -86,6 +87,7 @@ def main(args):
     optimizer = optim.AdamW(pg, lr=args.lr, weight_decay=1E-2)
 
     best_acc = 0.
+    min_loss = 100.
     train_tmp = args.train_tmp
     val_tmp = args.val_tmp
     for epoch in range(args.epochs):
@@ -114,18 +116,39 @@ def main(args):
         # tb_writer.add_scalar(tags[3], val_acc, epoch)
         # tb_writer.add_scalar(tags[4], optimizer.param_groups[0]["lr"], epoch)
 
-        if val_acc > best_acc:
-            best_acc = val_acc
-            torch.save(model.state_dict(), "./weights/best_model.pth")
+        # if val_acc > best_acc:
+        #     best_acc = val_acc
+        #     torch.save(model.state_dict(), "./weights/best_model.pth")
 
-        torch.save(model.state_dict(), "./weights/latest_model.pth")
+        # torch.save(model.state_dict(), "./weights/latest_model.pth")
+
+        sum_acc = 0
+        mean_best_acc = 0
+        for key,value in meters.items():
+            sum_acc += value['acc']
+        mean_acc = sum_acc / len(meters.items())
+        if mean_acc > mean_best_acc:
+            mean_best_acc = mean_acc
+            with open('sw_database.csv','w',newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['coder_channels','en_stride','min_loss','best_acc'])
+                for key,value in meters.items():
+                    param1 = key.split(',')[0].split('[')[-1]
+                    param2 = key.split(',')[1].split(']')[0].split(' ')[-1]
+                    # print(param2)
+                    writer.writerow([param1,param2,value['loss'],value['acc']])
+
+        # with open('sw_databse.txt','w') as f:
+        #     f.write(str(meters))
+        
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    FLAGS_num_list = [8,4,32]
-    FLAGS_quant_list = [7,6]
+    FLAGS_num_list = [8,4,16,32]
+    FLAGS_quant_list = [1,2]
     train_tmp1 = [[i,j] for i in FLAGS_num_list for j in FLAGS_quant_list]
+    train_tmp1 = [[8,1],[8,2],[4,1],[16,1],[32,2],[32,1]]
     train_tmp = []
     train_tmp.append(train_tmp1[-1])
     train_tmp = Cluster(train_tmp1)
@@ -133,10 +156,10 @@ if __name__ == '__main__':
 
     val_tmp = []
     val_tmp.append([FLAGS_num_list[-1], FLAGS_quant_list[-1]])
-    val_tmp = [[4,7],[8,7],[32,6]]
-    parser.add_argument('--num_classes', type=int, default=5)
-    parser.add_argument('--epochs', type=int, default=5)
-    parser.add_argument('--batch-size', type=int, default=64)
+    val_tmp = train_tmp1
+    parser.add_argument('--num_classes', type=int, default=10)
+    parser.add_argument('--epochs', type=int, default=600)
+    parser.add_argument('--batch-size', type=int, default=32)
     parser.add_argument('--lr', type=float, default=0.0002)
     parser.add_argument('--train_tmp', type=list, default=train_tmp)
     parser.add_argument('--val_tmp', type=list, default=val_tmp)

@@ -53,18 +53,11 @@ def objective(args):
     return config.min_loss
 
 # define a search space
-# space = [
-#     hp.choice('partition_id',[0,3,8,6,10]), # 3
-#     hp.choice('quant_bits',[1,2,4,8,16,32]), # 6
-#     hp.choice('coder_channels',[1,2,4,8,16,32,64]), # 7
-#     hp.choice('en_stide',[1,2,3,5,6,7,9]), # 7
-# ]
-
 space = [
-    hp.choice('partition_id',[3]), # 3
-    hp.choice('quant_bits',[-1]), # 6
-    hp.choice('coder_channels',[8,4,16,32]), # 7
-    hp.choice('en_stide',[1,2]), # 7
+    hp.choice('partition_id',[0,3,8,6,10]), # 3
+    hp.choice('quant_bits',[1,2,4,8,16,32]), # 6
+    hp.choice('coder_channels',[1,2,4,8,16,32,64]), # 7
+    hp.choice('en_stide',[1,2,3,5,6,7,9]), # 7
 ]
 
 def main(args):

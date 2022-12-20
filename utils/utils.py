@@ -185,19 +185,22 @@ def sw_train_one_epoch(model, optimizer, data_loader, device, epoch,train_tmp = 
         # sel_train_tmp = [random.choice(set_tmp) if isinstance(set_tmp[0],list) else set_tmp for set_tmp in train_tmp]
         sel_train_tmp = [random.choice(train_tmp) for i in range(3)]
         len_train_tmp = len(sel_train_tmp)
+        # for index,(_coder_channels, _en_stride,_quant_bits) in enumerate(sel_train_tmp):
         for index,(_coder_channels, _en_stride) in enumerate(sel_train_tmp):
             model.apply(lambda m: setattr(m, 'coder_channels', _coder_channels))
             model.apply(lambda m: setattr(m, 'en_stride', _en_stride))
+            # model.apply(lambda m: setattr(m, 'quant_bits', _quant_bits))
             # print(model.coder_channels)
-            accu_num += torch.eq(pred_classes, labels.to(device)).sum()
+            # accu_num += torch.eq(pred_classes, labels.to(device)).sum()
 
             if index == len_train_tmp-1:
+                accu_num += torch.eq(pred_classes, labels.to(device)).sum()
                 loss =loss_function(pred, labels.to(device))
                 loss.backward()
             else:
                 loss =loss_function(pred, labels.to(device))
                 loss.backward(retain_graph=True)
-                accu_num -= torch.eq(pred_classes, labels.to(device)).sum()
+                # accu_num -= torch.eq(pred_classes, labels.to(device)).sum()
             data_loader.set_description("[train epoch {}] {:18} loss: {:.3f}, acc: {:.3f}".format(epoch,str([_coder_channels, _en_stride]),
                                                                         accu_loss.item() / (step + 1),
                                                                         accu_num.item() / sample_num),refresh=True)
